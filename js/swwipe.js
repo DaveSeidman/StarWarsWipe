@@ -1,21 +1,14 @@
 var SWWipe = (function(banner) {
 
-	console.log("SWWipe");
+	var _this = this;
 
-	var canvas;
-	var context;
 	var images;
-	var index1 = -1;
-	var index2;
-	var curImg;
-	var nxtImg;
+	var index1 = -1, index2 = 0;
+	var curImg, nxtImg;
 	var gradient;
-	var banner;
-	var backCanvas;
-	var foreCanvas;
 
-	var backContext;
-	var foreContext;
+	var banner;
+	var backCanvas, foreCanvas, backContext, foreContext;
 
 	var fade1 = new Fade("leftToRight", .1, 0);
 
@@ -23,7 +16,6 @@ var SWWipe = (function(banner) {
 
 	function cacheElements() {
 
-		console.log("constructor?");
 		images = $(".bannerImages img");
 
 		banner = $($('.banner')[0]);
@@ -59,13 +51,14 @@ var SWWipe = (function(banner) {
 
 		nextFade();
 
-		resize();
+		_this.resize();
 	}
 
 
 	function redraw() {
 		
 		foreContext.save();
+		foreContext.clearRect(0,0,WIDTH,HEIGHT); 
 
 		switch(curImg.data("fadeType")) {
 
@@ -116,7 +109,6 @@ var SWWipe = (function(banner) {
 		
 		gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
 		gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
-
 
 		
 		foreContext.fillStyle = gradient;
@@ -188,7 +180,7 @@ var SWWipe = (function(banner) {
 		});
 	}
 
-	function resize() {
+	this.resize = function() {
 
 		WIDTH = window.innerWidth;
 		HEIGHT = window.innerHeight;
@@ -218,7 +210,7 @@ var SWWipe = (function(banner) {
 				HEIGHT * curImg.data("aspect"), 
 				HEIGHT);	
 		}
-	}
+	};
 
 	function Fade(type,width,amount) {
 
@@ -229,7 +221,7 @@ var SWWipe = (function(banner) {
 
 
 	init();
-	
-	return swwipe;
+
+	return _this;
 
 });
