@@ -58,6 +58,8 @@ var SWWipe = (function(banner) {
 				"fadeDelay":img.attr("data-fadeDelay"),
 				"fadeType":img.attr("data-fadeType"),
 				"fadeWidth":Number(img.attr("data-fadeWidth"))});
+
+			console.log(img.data("aspect"));
 		});
 
 		nextFade();
