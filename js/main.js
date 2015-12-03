@@ -1,6 +1,6 @@
 var wipe;
 
-$(document).on("ready", function() {
+$(window).on("load", function() {
 
 	wipe = new SWWipe($('.banner')[0]);
 });
