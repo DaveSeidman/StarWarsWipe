@@ -1,3 +1,13 @@
+/*
+
+TO Do:
+Test with different shaped images
+Test with images that are slow to load.
+Not using fade1 object properly, create new for each?
+
+*/
+"use strict";
+
 var SWWipe = (function(banner) {
 
 	var _this = this;
@@ -44,6 +54,7 @@ var SWWipe = (function(banner) {
 			var img = $(this);
 			img.data({
 				"aspect":this.width/this.height,
+				"fadeDuration":img.attr("data-fadeDuration"),
 				"fadeDelay":img.attr("data-fadeDelay"),
 				"fadeType":img.attr("data-fadeType"),
 				"fadeWidth":Number(img.attr("data-fadeWidth"))});
@@ -60,59 +71,93 @@ var SWWipe = (function(banner) {
 		foreContext.save();
 		foreContext.clearRect(0,0,WIDTH,HEIGHT); 
 
+		var fadeWidth = curImg.data("fadeWidth");
+
 		switch(curImg.data("fadeType")) {
 
 			case "cross-lr":
 				gradient = foreContext.createLinearGradient(
-					(fade1.amount - curImg.data("fadeWidth")) * WIDTH,0,
-					(fade1.amount + curImg.data("fadeWidth")) * WIDTH,0);
+					(fade1.amount * (1 + fadeWidth) - fadeWidth) * WIDTH,0,
+					(fade1.amount * (1 + fadeWidth) + fadeWidth) * WIDTH,0);
+					gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
+					gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
+					foreContext.fillStyle = gradient;
+					foreContext.fillRect(0,0,WIDTH,HEIGHT);
 			break;
 
 			case "cross-rl":
 				gradient = foreContext.createLinearGradient(
-					(1 - fade1.amount + curImg.data("fadeWidth")) * WIDTH,0,
-					(1 - fade1.amount - curImg.data("fadeWidth")) * WIDTH,0);
+					((1 - fade1.amount) * (1 + fadeWidth) + fadeWidth) * WIDTH,0,
+					((1 - fade1.amount) * (1 + fadeWidth) - fadeWidth) * WIDTH,0);
+					gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
+					gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
+					foreContext.fillStyle = gradient;
+					foreContext.fillRect(0,0,WIDTH,HEIGHT);
 			break;
 
 			case "cross-ud":
 				gradient = foreContext.createLinearGradient(
-					0,(fade1.amount - curImg.data("fadeWidth")) * WIDTH,
-					0,(fade1.amount + curImg.data("fadeWidth")) * WIDTH);
-
+					0,(fade1.amount * (1 + fadeWidth) - fadeWidth) * WIDTH,
+					0,(fade1.amount * (1 + fadeWidth) + fadeWidth) * WIDTH);
+					gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
+					gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
+					foreContext.fillStyle = gradient;
+					foreContext.fillRect(0,0,WIDTH,HEIGHT);
 			break;
 
 			case "cross-du":
 				gradient = foreContext.createLinearGradient(
-					0,(1 - fade1.amount + curImg.data("fadeWidth")) * WIDTH,
-					0,(1 - fade1.amount - curImg.data("fadeWidth")) * WIDTH);
+					0,((1 - fade1.amount) * (1 + fadeWidth) + fadeWidth) * WIDTH,
+					0,((1 - fade1.amount) * (1 + fadeWidth) - fadeWidth) * WIDTH);
+					gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
+					gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
+					foreContext.fillStyle = gradient;
+					foreContext.fillRect(0,0,WIDTH,HEIGHT);
 			break;
 
-			case "radial-in":
-				//gradient = foreContext.createRadialGradient(
-				//	(fade1.amount - curImg.data("fadeWidth")) * WIDTH,0,
-				//	(fade1.amount + curImg.data("fadeWidth")) * WIDTH,0);
+			case "diagonal-tl-br":
+				gradient = foreContext.createLinearGradient(
+					(fade1.amount * (2 + fadeWidth) - fadeWidth) * WIDTH,0,
+					(fade1.amount * (2 + fadeWidth) + fadeWidth) * WIDTH,fadeWidth * (WIDTH/(HEIGHT/2)) * WIDTH);
+					gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
+					gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
+					foreContext.fillStyle = gradient;
+					foreContext.fillRect(0,0,WIDTH,HEIGHT);				
+
+			break;
+
+			case "diagonal-tr-bl":
+				gradient = foreContext.createLinearGradient(
+					(fade1.amount * (1 + fadeWidth) - fadeWidth) * WIDTH,0,
+					(fade1.amount * (1 + fadeWidth) + fadeWidth) * WIDTH + WIDTH,HEIGHT);
+					gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
+					gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
+					foreContext.fillStyle = gradient;
+					foreContext.fillRect(0,0,WIDTH,HEIGHT);
+
+			break;
+
+			case "radial-btm":
+				foreContext.beginPath();
+				foreContext.arc(WIDTH/2, HEIGHT, HEIGHT, Math.PI, Math.PI + (Math.PI * fade1.amount));
+				foreContext.lineWidth=HEIGHT*2;
+				foreContext.stroke();
+				//boxBlurCanvasRGB( "foreCanvas", 0, 0, WIDTH, HEIGHT,5, 2 );
+
 			break;
 
 			case "radial-out":
-				gradient = foreContext.createLinearGradient(
-					(fade1.amount - curImg.data("fadeWidth")) * WIDTH,0,
-					(fade1.amount + curImg.data("fadeWidth")) * WIDTH,0);
+			
 			break;
 
 
 			default:
-				gradient = foreContext.createLinearGradient(
-					(fade1.amount - curImg.data("fadeWidth")) * WIDTH,0,
-					(fade1.amount + curImg.data("fadeWidth")) * WIDTH,0);
-
+			
+			break;
 		}
 		
-		gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
-		gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
-
 		
-		foreContext.fillStyle = gradient;
-		foreContext.fillRect(0,0,WIDTH,HEIGHT);
+
 		foreContext.globalCompositeOperation = "source-in";
 
 		if(ASPECT > nxtImg.data("aspect")) {
@@ -172,7 +217,7 @@ var SWWipe = (function(banner) {
 
 		// setup and start the fade
 		fade1.amount = -fade1.width;
-		TweenMax.to(fade1, 2, { 
+		TweenMax.to(fade1, curImg.data("fadeDuration"), { 
 			amount:1+fade1.width, 
 			delay:curImg.data("fadeDelay"), 
 			onUpdate:redraw, 
