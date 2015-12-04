@@ -58,8 +58,6 @@ var SWWipe = (function(banner) {
 				"fadeDelay":img.attr("data-fadeDelay"),
 				"fadeType":img.attr("data-fadeType"),
 				"fadeWidth":Number(img.attr("data-fadeWidth"))});
-
-			console.log(img.data("aspect"));
 		});
 
 		nextFade();
@@ -140,16 +138,49 @@ var SWWipe = (function(banner) {
 			break;
 
 			case "radial-btm":
-				foreContext.beginPath();
-				foreContext.arc(WIDTH/2, HEIGHT, HEIGHT, Math.PI, Math.PI + (Math.PI * fade1.amount));
-				foreContext.lineWidth=HEIGHT*2;
-				foreContext.stroke();
-				//boxBlurCanvasRGB( "foreCanvas", 0, 0, WIDTH, HEIGHT,5, 2 );
+							
+				var segments = 60; // the amount of segments to split the semi circle into
+				var fade = 10; // how many of segments to fade through
+				var len = Math.PI/segments;
+				
+				var rotate = Math.PI; // offset rotation 180 degrees for bottom arc
+				var alpha = 1; // we should probably be setting alpha rather than reducing it
 
+				var i = 0;
+				var x = Math.cos(i + rotate) * HEIGHT + WIDTH/2;
+				var y = Math.sin(i + rotate) * HEIGHT + HEIGHT;
+
+				foreContext.lineWidth = HEIGHT*2;
+				foreContext.beginPath();
+				foreContext.moveTo(Math.cos(rotate) * HEIGHT + WIDTH/2, Math.sin(i + rotate) * HEIGHT + HEIGHT);
+
+				for(i = 0; i < Math.PI; i += len) {
+
+					if(i/Math.PI > fade1.amount) alpha -= 1/fade;
+					x = Math.cos(i + rotate) * HEIGHT + WIDTH/2;
+					y = Math.sin(i + rotate) * HEIGHT + HEIGHT;
+					foreContext.lineTo(x,y);
+					//foreContext.closePath();
+					//foreContext.arc(WIDTH/2, HEIGHT, HEIGHT, rotate + i, rotate + i + len);
+					foreContext.strokeStyle = 'rgba(0,0,0,'+alpha+')';
+					foreContext.stroke();
+				}
+				
+
+				
 			break;
 
 			case "radial-out":
-			
+
+				var innerRadius = ((fade1.amount) * HEIGHT) - 100 < 0 ? .01 : ((fade1.amount) * HEIGHT) - 100;
+				var outerRadius = (fade1.amount * HEIGHT) + 100
+
+				gradient = foreContext.createRadialGradient(WIDTH/2, HEIGHT/2, innerRadius, WIDTH/2, HEIGHT/2, outerRadius);
+				gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
+				gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
+				foreContext.fillStyle = gradient;
+				foreContext.fillRect(0,0,WIDTH,HEIGHT);
+
 			break;
 
 
@@ -157,7 +188,6 @@ var SWWipe = (function(banner) {
 			
 			break;
 		}
-		
 		
 
 		foreContext.globalCompositeOperation = "source-in";
@@ -216,6 +246,7 @@ var SWWipe = (function(banner) {
 
 		// clear the foreground
 		foreContext.clearRect(0,0, WIDTH, HEIGHT);
+		//foreContext.lineWidth = HEIGHT*2;
 
 		// setup and start the fade
 		fade1.amount = -fade1.width;
