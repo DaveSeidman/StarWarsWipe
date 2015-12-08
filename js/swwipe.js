@@ -10,176 +10,199 @@ Not using fade1 object properly, create new for each?
 
 var SWWipe = (function(banner) {
 
-	var _this = this;
+	var sww = this;
+	
+	sww.banner = banner;	// div container 
+	sww.images;	// array of img elements
+	sww.imageArray = [];
+	sww.index1 = -1;
+	sww.index2 = 0;
+	sww.curImg;
+	sww.nxtImg;
+	//sww.gradient; // can probably remove this
 
-	var images;
-	var index1 = -1, index2 = 0;
-	var curImg, nxtImg;
-	var gradient;
+	sww.backCanvas;
+	sww.foreCanvas;
+	sww.backContext; 
+	sww.foreContext;
 
-	var banner;
-	var backCanvas, foreCanvas, backContext, foreContext;
+	sww.fade1 = new Fade("leftToRight", .1, 0);
 
-	var fade1 = new Fade("leftToRight", .1, 0);
-
-	var WIDTH,HEIGHT,ASPECT,OFFSETX,OFFSETY;
+	sww.WIDTH;
+	sww.HEIGHT;
+	sww.ASPECT;
+	sww.OFFSETX;
+	sww.OFFSETY;
 
 	function cacheElements() {
 
-		images = $(".bannerImages img");
+		sww.images = banner.getElementsByTagName("img");
 
-		banner = $($('.banner')[0]);
-
-		backCanvas = $('<canvas id="backCanvas">')[0];
-		foreCanvas = $('<canvas id="foreCanvas">')[0];
-
-		banner.append(backCanvas);
-		banner.append(foreCanvas);
-
-		backContext = backCanvas.getContext("2d");
-		foreContext = foreCanvas.getContext("2d");
+		sww.backCanvas = document.createElement('canvas');
+		sww.foreCanvas = document.createElement('canvas');
+		sww.banner.appendChild(sww.backCanvas);
+		sww.banner.appendChild(sww.foreCanvas);
+		sww.backContext = sww.backCanvas.getContext("2d");
+		sww.foreContext = sww.foreCanvas.getContext("2d");
 	}
 
 
 	function init() {
 
 		cacheElements();
-		//backContext.drawImage(images[index1],0,0,WIDTH,HEIGHT);
 
-		WIDTH = window.innerWidth;
-		HEIGHT = window.innerHeight;
-		ASPECT = WIDTH/HEIGHT;
-		images.each(function() {
+		sww.WIDTH = window.innerWidth;
+		sww.HEIGHT = window.innerHeight;
+		sww.ASPECT = sww.WIDTH/sww.HEIGHT;
 
-			var img = $(this);
-			img.data({
-				"aspect":this.width/this.height,
-				"fadeDuration":img.attr("data-fadeDuration"),
-				"fadeDelay":img.attr("data-fadeDelay"),
-				"fadeType":img.attr("data-fadeType"),
-				"fadeWidth":Number(img.attr("data-fadeWidth"))});
-		});
+		for(var i = 0; i < sww.images.length; i++) {
+
+			var image = sww.images[i];
+			var imageObject = {};
+			imageObject.img = image;
+			imageObject.aspect = image.width/image.height;
+			imageObject.fadeDuration = Number(image.getAttribute("data-fadeDuration"));
+			imageObject.fadeDelay = Number(image.getAttribute("data-fadeDelay"));
+			imageObject.fadeType = image.getAttribute("data-fadeType");
+			imageObject.fadeWidth = Number(image.getAttribute("data-fadeWidth"));
+
+			sww.imageArray.push(imageObject);
+		}
 
 		nextFade();
 
-		_this.resize();
+		sww.resize();
 	}
 
 
 	function redraw() {
 		
-		foreContext.save();
-		foreContext.clearRect(0,0,WIDTH,HEIGHT); 
+		sww.foreContext.save();
+		sww.foreContext.clearRect(0,0,sww.WIDTH,sww.HEIGHT); 
 
-		var fadeWidth = curImg.data("fadeWidth");
+		var fadeWidth = sww.curImg.fadeWidth;
+		var gradient;
 
-		switch(curImg.data("fadeType")) {
+		switch(sww.curImg.fadeType) {
 
 			case "cross-lr":
-				gradient = foreContext.createLinearGradient(
-					(fade1.amount * (1 + fadeWidth) - fadeWidth) * WIDTH,0,
-					(fade1.amount * (1 + fadeWidth) + fadeWidth) * WIDTH,0);
+				gradient = sww.foreContext.createLinearGradient(
+					(sww.fade1.amount * (1 + fadeWidth) - fadeWidth) * sww.WIDTH,0,
+					(sww.fade1.amount * (1 + fadeWidth) + fadeWidth) * sww.WIDTH,0);
 					gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
 					gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
-					foreContext.fillStyle = gradient;
-					foreContext.fillRect(0,0,WIDTH,HEIGHT);
+					sww.foreContext.fillStyle = gradient;
+					sww.foreContext.fillRect(0,0,sww.WIDTH,sww.HEIGHT);
 			break;
 
 			case "cross-rl":
-				gradient = foreContext.createLinearGradient(
-					((1 - fade1.amount) * (1 + fadeWidth) + fadeWidth) * WIDTH,0,
-					((1 - fade1.amount) * (1 + fadeWidth) - fadeWidth) * WIDTH,0);
+				gradient = sww.foreContext.createLinearGradient(
+					((1 - sww.fade1.amount) * (1 + fadeWidth) + fadeWidth) * sww.WIDTH,0,
+					((1 - sww.fade1.amount) * (1 + fadeWidth) - fadeWidth) * sww.WIDTH,0);
 					gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
 					gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
-					foreContext.fillStyle = gradient;
-					foreContext.fillRect(0,0,WIDTH,HEIGHT);
+					sww.foreContext.fillStyle = gradient;
+					sww.foreContext.fillRect(0,0,sww.WIDTH,sww.HEIGHT);
 			break;
 
 			case "cross-ud":
-				gradient = foreContext.createLinearGradient(
-					0,(fade1.amount * (1 + fadeWidth) - fadeWidth) * WIDTH,
-					0,(fade1.amount * (1 + fadeWidth) + fadeWidth) * WIDTH);
+				gradient = sww.foreContext.createLinearGradient(
+					0,(sww.fade1.amount * (1 + fadeWidth) - fadeWidth) * sww.WIDTH,
+					0,(sww.fade1.amount * (1 + fadeWidth) + fadeWidth) * sww.WIDTH);
 					gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
 					gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
-					foreContext.fillStyle = gradient;
-					foreContext.fillRect(0,0,WIDTH,HEIGHT);
+					sww.foreContext.fillStyle = gradient;
+					sww.foreContext.fillRect(0,0,sww.WIDTH,sww.HEIGHT);
 			break;
 
 			case "cross-du":
-				gradient = foreContext.createLinearGradient(
-					0,((1 - fade1.amount) * (1 + fadeWidth) + fadeWidth) * WIDTH,
-					0,((1 - fade1.amount) * (1 + fadeWidth) - fadeWidth) * WIDTH);
+				gradient = sww.foreContext.createLinearGradient(
+					0,((1 - sww.fade1.amount) * (1 + fadeWidth) + fadeWidth) * sww.WIDTH,
+					0,((1 - sww.fade1.amount) * (1 + fadeWidth) - fadeWidth) * sww.WIDTH);
 					gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
 					gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
-					foreContext.fillStyle = gradient;
-					foreContext.fillRect(0,0,WIDTH,HEIGHT);
+					sww.foreContext.fillStyle = gradient;
+					sww.foreContext.fillRect(0,0,sww.WIDTH,sww.HEIGHT);
 			break;
 
 			case "diagonal-tl-br":
-				gradient = foreContext.createLinearGradient(
-					(fade1.amount * (2 + fadeWidth) - fadeWidth) * WIDTH,0,
-					(fade1.amount * (2 + fadeWidth) + fadeWidth) * WIDTH,fadeWidth * (WIDTH/(HEIGHT/2)) * WIDTH);
+				gradient = sww.foreContext.createLinearGradient(
+					(sww.fade1.amount * (2 + fadeWidth) - fadeWidth) * sww.WIDTH,0,
+					(sww.fade1.amount * (2 + fadeWidth) + fadeWidth) * sww.WIDTH,fadeWidth * (sww.WIDTH/(sww.HEIGHT/2)) * sww.WIDTH);
 					gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
 					gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
-					foreContext.fillStyle = gradient;
-					foreContext.fillRect(0,0,WIDTH,HEIGHT);				
+					sww.foreContext.fillStyle = gradient;
+					sww.foreContext.fillRect(0,0,sww.WIDTH,sww.HEIGHT);				
 
 			break;
 
 			case "diagonal-tr-bl":
-				gradient = foreContext.createLinearGradient(
-					(fade1.amount * (1 + fadeWidth) - fadeWidth) * WIDTH,0,
-					(fade1.amount * (1 + fadeWidth) + fadeWidth) * WIDTH + WIDTH,HEIGHT);
+				gradient = sww.foreContext.createLinearGradient(
+					(sww.fade1.amount * (1 + fadeWidth) - fadeWidth) * sww.WIDTH,0,
+					(sww.fade1.amount * (1 + fadeWidth) + fadeWidth) * sww.WIDTH + sww.WIDTH,sww.HEIGHT);
 					gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
 					gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
-					foreContext.fillStyle = gradient;
-					foreContext.fillRect(0,0,WIDTH,HEIGHT);
+					sww.foreContext.fillStyle = gradient;
+					sww.foreContext.fillRect(0,0,sww.WIDTH,sww.HEIGHT);
 
 			break;
 
 			case "radial-btm":
 							
-				var segments = 60; // the amount of segments to split the semi circle into
-				var fade = 10; // how many of segments to fade through
+				var segments = 360; // the amount of segments to split the semi circle into
+				var fade = 50; // how many of segments to fade through
 				var len = Math.PI/segments;
 				
 				var rotate = Math.PI; // offset rotation 180 degrees for bottom arc
 				var alpha = 1; // we should probably be setting alpha rather than reducing it
 
 				var i = 0;
-				var x = Math.cos(i + rotate) * HEIGHT + WIDTH/2;
-				var y = Math.sin(i + rotate) * HEIGHT + HEIGHT;
-
-				foreContext.lineWidth = HEIGHT*2;
-				foreContext.beginPath();
-				foreContext.moveTo(Math.cos(rotate) * HEIGHT + WIDTH/2, Math.sin(i + rotate) * HEIGHT + HEIGHT);
+				var x = Math.cos(i + rotate) * (sww.HEIGHT*2) + sww.WIDTH/2;
+				var y = Math.sin(i + rotate) * (sww.HEIGHT*2) + sww.HEIGHT;
+				var x2 = Math.cos(i + 1 + rotate) * (sww.HEIGHT*2) + sww.WIDTH/2;
+				var y2 = Math.sin(i + 1 + rotate) * (sww.HEIGHT*2) + sww.HEIGHT;
 
 				for(i = 0; i < Math.PI; i += len) {
 
-					if(i/Math.PI > fade1.amount) alpha -= 1/fade;
-					x = Math.cos(i + rotate) * HEIGHT + WIDTH/2;
-					y = Math.sin(i + rotate) * HEIGHT + HEIGHT;
-					foreContext.lineTo(x,y);
-					//foreContext.closePath();
-					//foreContext.arc(WIDTH/2, HEIGHT, HEIGHT, rotate + i, rotate + i + len);
-					foreContext.strokeStyle = 'rgba(0,0,0,'+alpha+')';
-					foreContext.stroke();
+					if(i/Math.PI > sww.fade1.amount) alpha -= 1/fade;
+					x = Math.cos(i + rotate) * (sww.HEIGHT*2) + sww.WIDTH/2;
+					y = Math.sin(i + rotate) * (sww.HEIGHT*2) + sww.HEIGHT;
+					x2 = Math.cos(i + len + rotate) * (sww.HEIGHT*2) + sww.WIDTH/2;
+					y2 = Math.sin(i + len + rotate) * (sww.HEIGHT*2) + sww.HEIGHT;
+					sww.foreContext.beginPath();
+					sww.foreContext.moveTo(sww.WIDTH/2 - 1,sww.HEIGHT);
+					sww.foreContext.lineTo(x,y);
+					sww.foreContext.lineTo(x2,y2);
+					sww.foreContext.lineTo(sww.WIDTH/2 + 1, sww.HEIGHT);
+					sww.foreContext.fillStyle = 'rgba(0,0,0,'+alpha+')';
+					sww.foreContext.fill();
 				}
 				
+			break;
 
-				
+			case "radial-in":
+
+				var innerRadius = ((sww.fade1.amount) * sww.HEIGHT) - 100 < 0 ? .01 : ((sww.fade1.amount) * sww.HEIGHT) - 100;
+				var outerRadius = (sww.fade1.amount * sww.HEIGHT) + 100
+
+				gradient = foreContext.createRadialGradient(sww.WIDTH/2, sww.HEIGHT/2, innerRadius, sww.WIDTH/2, sww.HEIGHT/2, outerRadius);
+				gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
+				gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
+				foreContext.fillStyle = gradient;
+				foreContext.fillRect(0,0,sww.WIDTH,sww.HEIGHT);
+
 			break;
 
 			case "radial-out":
 
-				var innerRadius = ((fade1.amount) * HEIGHT) - 100 < 0 ? .01 : ((fade1.amount) * HEIGHT) - 100;
-				var outerRadius = (fade1.amount * HEIGHT) + 100
+				var innerRadius = ((sww.fade1.amount) * sww.HEIGHT) - 100 < 0 ? .01 : ((sww.fade1.amount) * sww.HEIGHT) - 100;
+				var outerRadius = (sww.fade1.amount * sww.HEIGHT) + 100
 
-				gradient = foreContext.createRadialGradient(WIDTH/2, HEIGHT/2, innerRadius, WIDTH/2, HEIGHT/2, outerRadius);
+				gradient = foreContext.createRadialGradient(sww.WIDTH/2, sww.HEIGHT/2, innerRadius, sww.WIDTH/2, sww.HEIGHT/2, outerRadius);
 				gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
 				gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
 				foreContext.fillStyle = gradient;
-				foreContext.fillRect(0,0,WIDTH,HEIGHT);
+				foreContext.fillRect(0,0,sww.WIDTH,sww.HEIGHT);
 
 			break;
 
@@ -190,69 +213,69 @@ var SWWipe = (function(banner) {
 		}
 		
 
-		foreContext.globalCompositeOperation = "source-in";
+		sww.foreContext.globalCompositeOperation = "source-in";
 
-		if(ASPECT > nxtImg.data("aspect")) {
+		if(sww.ASPECT > sww.nxtImg.aspect) {
 
-			foreContext.drawImage(nxtImg[0], 
+			sww.foreContext.drawImage(sww.nxtImg.img, 
 			0, 
-			(HEIGHT - (WIDTH / nxtImg.data("aspect")))/2, 
-			WIDTH, 
-			WIDTH / nxtImg.data("aspect"));	
+			(sww.HEIGHT - (sww.WIDTH / sww.nxtImg.aspect))/2, 
+			sww.WIDTH, 
+			sww.WIDTH / sww.nxtImg.aspect);	
 		}
 		else {
 
-			foreContext.drawImage(nxtImg[0], 
-			(WIDTH - (HEIGHT * nxtImg.data("aspect")))/2, 
+			sww.foreContext.drawImage(sww.nxtImg.img, 
+			(sww.WIDTH - (sww.HEIGHT * sww.nxtImg.aspect))/2, 
 			0, 
-			HEIGHT * nxtImg.data("aspect"), 
-			HEIGHT);	
+			sww.HEIGHT * sww.nxtImg.aspect, 
+			sww.HEIGHT);	
 		}
 		
-		foreContext.restore();
+		sww.foreContext.restore();
 	}
 
 	function nextFade() {
 
 		// advance indices
-		index1++;
-		if(index1 == images.length) index1 = 0;
-		curImg = $(images[index1]);
+		sww.index1++;
+		if(sww.index1 == sww.images.length) sww.index1 = 0;
+		sww.curImg = sww.imageArray[sww.index1];
 
-		index2 = index1 + 1;
-		if(index2 == images.length) index2 = 0;
-		nxtImg = $(images[index2]);
+		sww.index2 = sww.index1 + 1;
+		if(sww.index2 == sww.images.length) sww.index2 = 0;
+		sww.nxtImg = sww.imageArray[sww.index2];
 
 		//backContext.clearRect(0,0,WIDTH,HEIGHT);
 
-		if(ASPECT > curImg.data("aspect")) {
+		if(sww.ASPECT > sww.curImg.aspect) {
 
-			backContext.drawImage(
-				curImg[0], 
+			sww.backContext.drawImage(
+				sww.curImg.img, 
 				0, 
-				(HEIGHT - (WIDTH / curImg.data("aspect")))/2, 
-				WIDTH, 
-				WIDTH / curImg.data("aspect"));	
+				(sww.HEIGHT - (sww.WIDTH / sww.curImg.aspect))/2, 
+				sww.WIDTH, 
+				sww.WIDTH / sww.curImg.aspect);	
 		}
 		else {
 
-			backContext.drawImage(
-				curImg[0], 
-				(WIDTH - (HEIGHT * curImg.data("aspect")))/2, 
+			sww.backContext.drawImage(
+				sww.curImg.img, 
+				(sww.WIDTH - (sww.HEIGHT * sww.curImg.aspect))/2, 
 				0, 
-				HEIGHT * curImg.data("aspect"), 
-				HEIGHT);	
+				sww.HEIGHT * sww.curImg.aspect, 
+				sww.HEIGHT);	
 		}
 
 		// clear the foreground
-		foreContext.clearRect(0,0, WIDTH, HEIGHT);
+		sww.foreContext.clearRect(0,0, sww.WIDTH, sww.HEIGHT);
 		//foreContext.lineWidth = HEIGHT*2;
 
 		// setup and start the fade
-		fade1.amount = -fade1.width;
-		TweenMax.to(fade1, curImg.data("fadeDuration"), { 
-			amount:1+fade1.width, 
-			delay:curImg.data("fadeDelay"), 
+		sww.fade1.amount = -sww.fade1.width;
+		TweenMax.to(sww.fade1, sww.curImg.fadeDuration, { 
+			amount:1+sww.fade1.width, 
+			delay:sww.curImg.fadeDelay, 
 			onUpdate:redraw, 
 			onComplete:nextFade 
 		});
@@ -260,33 +283,33 @@ var SWWipe = (function(banner) {
 
 	this.resize = function() {
 
-		WIDTH = window.innerWidth;
-		HEIGHT = window.innerHeight;
-		ASPECT = WIDTH/HEIGHT;
+		sww.WIDTH = window.innerWidth;
+		sww.HEIGHT = window.innerHeight;
+		sww.ASPECT = sww.WIDTH/sww.HEIGHT;
 
-		backContext.canvas.width = WIDTH;
-		backContext.canvas.height = HEIGHT;
+		sww.backContext.canvas.width = sww.WIDTH;
+		sww.backContext.canvas.height = sww.HEIGHT;
 
-		foreContext.canvas.width = WIDTH;
-		foreContext.canvas.height = HEIGHT;
+		sww.foreContext.canvas.width = sww.WIDTH;
+		sww.foreContext.canvas.height = sww.HEIGHT;
 
-		if(ASPECT > curImg.data("aspect")) {
+		if(sww.ASPECT > sww.curImg.aspect) {
 
-			backContext.drawImage(
-				curImg[0], 
+			sww.backContext.drawImage(
+				sww.curImg.img, 
 				0, 
-				(HEIGHT - (WIDTH / curImg.data("aspect")))/2, 
-				WIDTH, 
-				WIDTH / curImg.data("aspect"));	
+				(sww.HEIGHT - (sww.WIDTH / sww.curImg.aspect))/2, 
+				sww.WIDTH, 
+				sww.WIDTH / sww.curImg.aspect);	
 		}
 		else {
 
-			backContext.drawImage(
-				curImg[0], 
-				(WIDTH - (HEIGHT * curImg.data("aspect")))/2, 
+			sww.backContext.drawImage(
+				sww.curImg.img, 
+				(sww.WIDTH - (sww.HEIGHT * sww.curImg.aspect))/2, 
 				0, 
-				HEIGHT * curImg.data("aspect"), 
-				HEIGHT);	
+				sww.HEIGHT * sww.curImg.aspect, 
+				sww.HEIGHT);	
 		}
 	};
 
@@ -300,6 +323,6 @@ var SWWipe = (function(banner) {
 
 	init();
 
-	return _this;
+	return sww;
 
 });

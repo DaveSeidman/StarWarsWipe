@@ -1,12 +1,11 @@
 var wipe;
 
-$(window).on("load", function() {
+window.onload = function() {
 
-	wipe = new SWWipe($('.banner')[0]);
-});
+	wipe = new SWWipe(document.getElementsByClassName("banner")[0]);
+}
 
-
-$(window).on("resize", function() {
+window.onresize = function() {
 
 	wipe.resize();
-});
+}
