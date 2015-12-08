@@ -125,7 +125,8 @@ var SWWipe = (function(banner) {
 					sww.foreContext.fillRect(0,0,sww.WIDTH,sww.HEIGHT);
 			break;
 
-			case "diagonal-tl-br":
+			case "diagonal-tl-br": // DS: This diagonal not working properly
+
 				gradient = sww.foreContext.createLinearGradient(
 					(sww.fade1.amount * (2 + fadeWidth) - fadeWidth) * sww.WIDTH,0,
 					(sww.fade1.amount * (2 + fadeWidth) + fadeWidth) * sww.WIDTH,fadeWidth * (sww.WIDTH/(sww.HEIGHT/2)) * sww.WIDTH);
@@ -185,11 +186,11 @@ var SWWipe = (function(banner) {
 				var innerRadius = ((sww.fade1.amount) * sww.HEIGHT) - 100 < 0 ? .01 : ((sww.fade1.amount) * sww.HEIGHT) - 100;
 				var outerRadius = (sww.fade1.amount * sww.HEIGHT) + 100
 
-				gradient = foreContext.createRadialGradient(sww.WIDTH/2, sww.HEIGHT/2, innerRadius, sww.WIDTH/2, sww.HEIGHT/2, outerRadius);
+				gradient = sww.foreContext.createRadialGradient(sww.WIDTH/2, sww.HEIGHT/2, innerRadius, sww.WIDTH/2, sww.HEIGHT/2, outerRadius);
 				gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
 				gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
-				foreContext.fillStyle = gradient;
-				foreContext.fillRect(0,0,sww.WIDTH,sww.HEIGHT);
+				sww.foreContext.fillStyle = gradient;
+				sww.foreContext.fillRect(0,0,sww.WIDTH,sww.HEIGHT);
 
 			break;
 
@@ -198,11 +199,11 @@ var SWWipe = (function(banner) {
 				var innerRadius = ((sww.fade1.amount) * sww.HEIGHT) - 100 < 0 ? .01 : ((sww.fade1.amount) * sww.HEIGHT) - 100;
 				var outerRadius = (sww.fade1.amount * sww.HEIGHT) + 100
 
-				gradient = foreContext.createRadialGradient(sww.WIDTH/2, sww.HEIGHT/2, innerRadius, sww.WIDTH/2, sww.HEIGHT/2, outerRadius);
+				gradient = sww.foreContext.createRadialGradient(sww.WIDTH/2, sww.HEIGHT/2, innerRadius, sww.WIDTH/2, sww.HEIGHT/2, outerRadius);
 				gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
 				gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
-				foreContext.fillStyle = gradient;
-				foreContext.fillRect(0,0,sww.WIDTH,sww.HEIGHT);
+				sww.foreContext.fillStyle = gradient;
+				sww.foreContext.fillRect(0,0,sww.WIDTH,sww.HEIGHT);
 
 			break;
 
