@@ -5,7 +5,7 @@ Star Wars style image wipes using the canvas element in HTML
 No external dependencies required.
 
 # Use
-Create a div or any other container with the class "banner" than an inner container named "bannerImages" and include the .js file named swwipe.js and the 
+Create a div or any other container with the class "banner" than an inner container named "bannerImages" and include the js/swwipe.js file and the css/fade.css file
 
 ```
 <div class="banner">
