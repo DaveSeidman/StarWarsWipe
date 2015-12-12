@@ -275,7 +275,8 @@ var SWWipe = (function(banner) {
 	this.resize = function() {
 
 		WIDTH = window.innerWidth;
-		HEIGHT = window.innerHeight;
+		//HEIGHT = window.innerHeight;
+		HEIGHT = document.documentElement.clientHeight; // DS: trying this to fix ios 9 bug
 		ASPECT = WIDTH/HEIGHT;
 
 		sww.backContext.canvas.width = WIDTH;
