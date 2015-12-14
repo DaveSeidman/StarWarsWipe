@@ -77,188 +77,8 @@ var SWWipe = (function(banner) {
 	}
 
 
-	function redraw() {
-		
-		_this.foreContext.save();
-		_this.foreContext.clearRect(0,0,WIDTH,HEIGHT); 
 
-		currentTime = new Date;
-		elapsed = currentTime - startTime;
-
-
-		fadeWidth = _this.curImg.fadeWidth;
-		
-		switch(_this.curImg.fadeType) {
-
-			case "cross-lr":
-			gradient = _this.foreContext.createLinearGradient(
-				(_this.percent * (1 + fadeWidth) - fadeWidth) * WIDTH,0,
-				(_this.percent * (1 + fadeWidth) + fadeWidth) * WIDTH,0);
-			gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
-			gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
-			_this.foreContext.fillStyle = gradient;
-			_this.foreContext.fillRect(0,0,WIDTH,HEIGHT);
-			break;
-
-			case "cross-rl":
-			gradient = _this.foreContext.createLinearGradient(
-				((1 - _this.percent) * (1 + fadeWidth) + fadeWidth) * WIDTH,0,
-				((1 - _this.percent) * (1 + fadeWidth) - fadeWidth) * WIDTH,0);
-			gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
-			gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
-			_this.foreContext.fillStyle = gradient;
-			_this.foreContext.fillRect(0,0,WIDTH,HEIGHT);
-			break;
-
-			case "cross-ud":
-			gradient = _this.foreContext.createLinearGradient(
-				0,(_this.percent * (1 + fadeWidth) - fadeWidth) * WIDTH,
-				0,(_this.percent * (1 + fadeWidth) + fadeWidth) * WIDTH);
-			gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
-			gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
-			_this.foreContext.fillStyle = gradient;
-			_this.foreContext.fillRect(0,0,WIDTH,HEIGHT);
-			break;
-
-			case "cross-du":
-			gradient = _this.foreContext.createLinearGradient(
-				0,((1 - _this.percent) * (1 + fadeWidth) + fadeWidth) * WIDTH,
-				0,((1 - _this.percent) * (1 + fadeWidth) - fadeWidth) * WIDTH);
-			gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
-			gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
-			_this.foreContext.fillStyle = gradient;
-			_this.foreContext.fillRect(0,0,WIDTH,HEIGHT);
-			break;
-
-			case "diagonal-tl-br": // DS: This diagonal not working properly
-
-			gradient = _this.foreContext.createLinearGradient(
-				(_this.percent * (2 + fadeWidth) - fadeWidth) * WIDTH,0,
-				(_this.percent * (2 + fadeWidth) + fadeWidth) * WIDTH,fadeWidth * (WIDTH/(HEIGHT/2)) * WIDTH);
-			gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
-			gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
-			_this.foreContext.fillStyle = gradient;
-			_this.foreContext.fillRect(0,0,WIDTH,HEIGHT);				
-
-			break;
-
-			case "diagonal-tr-bl":
-			gradient = _this.foreContext.createLinearGradient(
-				(_this.percent * (1 + fadeWidth) - fadeWidth) * WIDTH,0,
-				(_this.percent * (1 + fadeWidth) + fadeWidth) * WIDTH + WIDTH,HEIGHT);
-			gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
-			gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
-			_this.foreContext.fillStyle = gradient;
-			_this.foreContext.fillRect(0,0,WIDTH,HEIGHT);
-
-			break;
-
-			case "radial-btm":
-
-				var segments = 300; // the amount of segments to split the semi circle into, DS: adjust this for performance
-				//var fade = segments * fadeWidth; // how many of segments to fade through
-				var len = Math.PI/segments;
-				var step = 1/segments;
-
-				var rotate = Math.PI; // offset rotation 180 degrees for bottom arc
-				//var alpha = 1; // we should probably be setting alpha rather than reducing it
-
-				//var i;
-				//var x1 = Math.cos(i + rotate) * (HEIGHT*2) + WIDTH/2;
-				//var y1 = Math.sin(i + rotate) * (HEIGHT*2) + HEIGHT;
-				//var x2 = Math.cos(i + 1 + rotate) * (HEIGHT*2) + WIDTH/2;
-				//var y2 = Math.sin(i + 1 + rotate) * (HEIGHT*2) + HEIGHT;
-				
-				//var fadeWidthRad = fadeWidth * Math.PI;
-				//var percentRad = (_this.percent * (Math.PI + fadeWidthRad * 2)) - fadeWidthRad;
-				
-				// expand percent to cover fadeWidth
-				var adjustedPercent = (_this.percent * (1 + fadeWidth)) - fadeWidth;
-
-				// iterate a percent
-				for(var percent = -fadeWidth; percent < 1 + fadeWidth; percent += step) {
-
-					// convert percent to angle
-					var angle = percent * Math.PI;
-					
-					// calculate coordinates for wedge
-					var x1 = Math.cos(angle + rotate) * (HEIGHT*2) + WIDTH/2;
-					var y1 = Math.sin(angle + rotate) * (HEIGHT*2) + HEIGHT;
-					var x2 = Math.cos(angle + len + rotate) * (HEIGHT*2) + WIDTH/2;
-					var y2 = Math.sin(angle + len + rotate) * (HEIGHT*2) + HEIGHT;
-
-					// calculate alpha for wedge
-					var alpha = (adjustedPercent - percent + fadeWidth)/fadeWidth;
-					
-					// draw wedge 
-					_this.foreContext.beginPath();
-					_this.foreContext.moveTo(WIDTH/2-2,HEIGHT);
-					_this.foreContext.lineTo(x1,y1);
-					_this.foreContext.lineTo(x2,y2);
-					_this.foreContext.lineTo(WIDTH/2+2, HEIGHT);
-					_this.foreContext.fillStyle = 'rgba(0,0,0,'+alpha+')';
-					_this.foreContext.fill();
-				}
-				
-				break;
-
-				case "radial-in":
-
-				var innerRadius = ((_this.percent) * HEIGHT) - 100 < 0 ? .01 : ((_this.percent) * HEIGHT) - 100;
-				var outerRadius = (_this.percent * HEIGHT) + 100
-				gradient = _this.foreContext.createRadialGradient(WIDTH/2, HEIGHT/2, innerRadius, WIDTH/2, HEIGHT/2, outerRadius);
-				gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
-				gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
-				_this.foreContext.fillStyle = gradient;
-				_this.foreContext.fillRect(0,0,WIDTH,HEIGHT);
-
-				break;
-
-				case "radial-out":
-
-				var innerRadius = ((_this.percent) * HEIGHT) - 100 < 0 ? .01 : ((_this.percent) * HEIGHT) - 100;
-				var outerRadius = (_this.percent * HEIGHT) + 100
-				gradient = _this.foreContext.createRadialGradient(WIDTH/2, HEIGHT/2, innerRadius, WIDTH/2, HEIGHT/2, outerRadius);
-				gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
-				gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
-				_this.foreContext.fillStyle = gradient;
-				_this.foreContext.fillRect(0,0,WIDTH,HEIGHT);
-
-				break;
-
-
-				default:
-
-				break;
-			}
-
-			_this.foreContext.globalCompositeOperation = "source-in";
-
-			if(ASPECT > _this.nxtImg.aspect) {
-
-				_this.foreContext.drawImage(_this.nxtImg.img, 
-					0, 
-					(HEIGHT - (WIDTH / _this.nxtImg.aspect))/2, 
-					WIDTH, 
-					WIDTH / _this.nxtImg.aspect);	
-			}
-			else {
-
-				_this.foreContext.drawImage(_this.nxtImg.img, 
-					(WIDTH - (HEIGHT * _this.nxtImg.aspect))/2, 
-					0, 
-					HEIGHT * _this.nxtImg.aspect, 
-					HEIGHT);	
-			}
-
-			_this.foreContext.restore();
-
-			_this.percent = elapsed / _this.curImg.fadeDuration;
-			if(elapsed < _this.curImg.fadeDuration) requestAnimFrame(redraw);
-			else setTimeout(nextFade, _this.curImg.fadeDelay);
-		}
-
-		function nextFade() {
+	function nextFade() {
 
 		// advance indices
 		index1++;
@@ -268,8 +88,6 @@ var SWWipe = (function(banner) {
 		index2 = index1 + 1;
 		if(index2 == _this.images.length) index2 = 0;
 		_this.nxtImg = _this.imageArray[index2];
-
-		//backContext.clearRect(0,0,WIDTH,HEIGHT);
 
 		if(ASPECT > _this.curImg.aspect) {
 
@@ -294,11 +112,223 @@ var SWWipe = (function(banner) {
 		_this.foreContext.clearRect(0,0, WIDTH, HEIGHT);
 
 		// setup and start the fade
+		fadeWidth = _this.curImg.fadeWidth;
 		_this.percent = -_this.curImg.fadeWidth;
 		_this.step = 1/(_this.curImg.fadeDuration * 1000);
 		startTime = new Date;
 		redraw();
 	}
+
+
+	function redraw() {
+		
+		// calculate percent completion of wipe
+		currentTime = new Date;
+		elapsed = currentTime - startTime;
+		_this.percent = elapsed / _this.curImg.fadeDuration;
+		//fadeWidth = _this.curImg.fadeWidth;
+		
+
+		_this.foreContext.save();
+		_this.foreContext.clearRect(0,0,WIDTH,HEIGHT); 
+
+
+		switch(_this.curImg.fadeType) {
+
+			case "cross-lr":
+				gradient = _this.foreContext.createLinearGradient(
+					(_this.percent * (1 + fadeWidth) - fadeWidth) * WIDTH,0,
+					(_this.percent * (1 + fadeWidth) + fadeWidth) * WIDTH,0);
+				gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
+				gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
+				_this.foreContext.fillStyle = gradient;
+				_this.foreContext.fillRect(0,0,WIDTH,HEIGHT);
+			break;
+
+			case "cross-rl":
+				gradient = _this.foreContext.createLinearGradient(
+					((1 - _this.percent) * (1 + fadeWidth) + fadeWidth) * WIDTH,0,
+					((1 - _this.percent) * (1 + fadeWidth) - fadeWidth) * WIDTH,0);
+				gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
+				gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
+				_this.foreContext.fillStyle = gradient;
+				_this.foreContext.fillRect(0,0,WIDTH,HEIGHT);
+			break;
+
+			case "cross-ud":
+				gradient = _this.foreContext.createLinearGradient(
+					0,(_this.percent * (1 + fadeWidth) - fadeWidth) * WIDTH,
+					0,(_this.percent * (1 + fadeWidth) + fadeWidth) * WIDTH);
+				gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
+				gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
+				_this.foreContext.fillStyle = gradient;
+				_this.foreContext.fillRect(0,0,WIDTH,HEIGHT);
+			break;
+
+			case "cross-du":
+				gradient = _this.foreContext.createLinearGradient(
+					0,((1 - _this.percent) * (1 + fadeWidth) + fadeWidth) * WIDTH,
+					0,((1 - _this.percent) * (1 + fadeWidth) - fadeWidth) * WIDTH);
+				gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
+				gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
+				_this.foreContext.fillStyle = gradient;
+				_this.foreContext.fillRect(0,0,WIDTH,HEIGHT);
+			break;
+
+			case "diagonal-tl-br": // DS: This diagonal not working properly
+
+				gradient = _this.foreContext.createLinearGradient(
+					(_this.percent * (2 + fadeWidth) - fadeWidth) * WIDTH,0,
+					(_this.percent * (2 + fadeWidth) + fadeWidth) * WIDTH,fadeWidth * (WIDTH/(HEIGHT/2)) * WIDTH);
+				gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
+				gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
+				_this.foreContext.fillStyle = gradient;
+				_this.foreContext.fillRect(0,0,WIDTH,HEIGHT);				
+
+			break;
+
+			case "diagonal-tr-bl":
+				gradient = _this.foreContext.createLinearGradient(
+					(_this.percent * (1 + fadeWidth) - fadeWidth) * WIDTH,0,
+					(_this.percent * (1 + fadeWidth) + fadeWidth) * WIDTH + WIDTH,HEIGHT);
+				gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
+				gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
+				_this.foreContext.fillStyle = gradient;
+				_this.foreContext.fillRect(0,0,WIDTH,HEIGHT);
+
+			break;
+
+			case "radial-btm":
+
+				var segments = 300; // the amount of segments to split the semi circle into, DS: adjust this for performance
+				var len = Math.PI/segments;
+				var step = 1/segments;
+
+				// expand percent to cover fadeWidth
+				var adjustedPercent = (_this.percent * (1 + fadeWidth)) - fadeWidth;
+
+				// iterate a percent
+				for(var percent = -fadeWidth; percent < 1 + fadeWidth; percent += step) {
+
+					// convert percent to angle
+					var angle = percent * Math.PI;
+					
+					// calculate coordinates for wedge
+					var x1 = Math.cos(angle + Math.PI) * (HEIGHT*2) + WIDTH/2;
+					var y1 = Math.sin(angle + Math.PI) * (HEIGHT*2) + HEIGHT;
+					var x2 = Math.cos(angle + len + Math.PI) * (HEIGHT*2) + WIDTH/2;
+					var y2 = Math.sin(angle + len + Math.PI) * (HEIGHT*2) + HEIGHT;
+
+					// calculate alpha for wedge
+					var alpha = (adjustedPercent - percent + fadeWidth)/fadeWidth;
+					
+					// draw wedge 
+					_this.foreContext.beginPath();
+					_this.foreContext.moveTo(WIDTH/2-2,HEIGHT);
+					_this.foreContext.lineTo(x1,y1);
+					_this.foreContext.lineTo(x2,y2);
+					_this.foreContext.lineTo(WIDTH/2+2, HEIGHT);
+					_this.foreContext.fillStyle = 'rgba(0,0,0,'+alpha+')';
+					_this.foreContext.fill();
+				}
+				
+			break;
+
+			case "radial-top":
+
+				var segments = 300; // the amount of segments to split the semi circle into, DS: adjust this for performance
+				var len = Math.PI/segments;
+				var step = 1/segments;
+
+				// expand percent to cover fadeWidth
+				var adjustedPercent = (_this.percent * (1 + fadeWidth)) - fadeWidth;
+
+				// iterate a percent
+				for(var percent = -fadeWidth; percent < 1 + fadeWidth; percent += step) {
+
+					// convert percent to angle
+					var angle = percent * Math.PI;
+					
+					// calculate coordinates for wedge
+					var x1 = Math.cos(angle + (2*Math.PI)) * (HEIGHT*2) + WIDTH/2;
+					var y1 = Math.sin(angle + (2*Math.PI)) * (HEIGHT*2);
+					var x2 = Math.cos(angle + len + (2*Math.PI)) * (HEIGHT*2) + WIDTH/2;
+					var y2 = Math.sin(angle + len + (2*Math.PI)) * (HEIGHT*2);
+
+					// calculate alpha for wedge
+					var alpha = (adjustedPercent - percent + fadeWidth)/fadeWidth;
+					
+					// draw wedge 
+					_this.foreContext.beginPath();
+					_this.foreContext.moveTo(WIDTH/2-2,0);
+					_this.foreContext.lineTo(x2,y2);
+					_this.foreContext.lineTo(x1,y1);
+					
+					_this.foreContext.lineTo(WIDTH/2+2,0);
+					_this.foreContext.fillStyle = 'rgba(0,0,0,'+alpha+')';
+					_this.foreContext.fill();
+				}
+				
+			break;
+
+			case "radial-in":
+
+				var innerRadius = ((_this.percent) * HEIGHT) - 100 < 0 ? .01 : ((_this.percent) * HEIGHT) - 100;
+				var outerRadius = (_this.percent * HEIGHT) + 100
+				gradient = _this.foreContext.createRadialGradient(WIDTH/2, HEIGHT/2, innerRadius, WIDTH/2, HEIGHT/2, outerRadius);
+				gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
+				gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
+				_this.foreContext.fillStyle = gradient;
+				_this.foreContext.fillRect(0,0,WIDTH,HEIGHT);
+
+			break;
+
+			case "radial-out":
+
+				var innerRadius = ((_this.percent) * HEIGHT) - 100 < 0 ? .01 : ((_this.percent) * HEIGHT) - 100;
+				var outerRadius = (_this.percent * HEIGHT) + 100
+				gradient = _this.foreContext.createRadialGradient(WIDTH/2, HEIGHT/2, innerRadius, WIDTH/2, HEIGHT/2, outerRadius);
+				gradient.addColorStop(0.0, 'rgba(0,0,0,1)');
+				gradient.addColorStop(1.0, 'rgba(0,0,0,0)');
+				_this.foreContext.fillStyle = gradient;
+				_this.foreContext.fillRect(0,0,WIDTH,HEIGHT);
+
+			break;
+
+
+			default:
+
+			break;
+
+		}
+
+		_this.foreContext.globalCompositeOperation = "source-in";
+
+		if(ASPECT > _this.nxtImg.aspect) {
+
+			_this.foreContext.drawImage(_this.nxtImg.img, 
+				0, 
+				(HEIGHT - (WIDTH / _this.nxtImg.aspect))/2, 
+				WIDTH, 
+				WIDTH / _this.nxtImg.aspect);	
+		}
+		else {
+
+			_this.foreContext.drawImage(_this.nxtImg.img, 
+				(WIDTH - (HEIGHT * _this.nxtImg.aspect))/2, 
+				0, 
+				HEIGHT * _this.nxtImg.aspect, 
+				HEIGHT);	
+		}
+
+		_this.foreContext.restore();
+
+		
+		if(elapsed < _this.curImg.fadeDuration) requestAnimFrame(redraw);
+		else setTimeout(nextFade, _this.curImg.fadeDelay);
+	}
+
+
 
 	_this.resize = function() {
 
