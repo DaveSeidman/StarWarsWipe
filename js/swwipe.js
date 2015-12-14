@@ -1,6 +1,10 @@
 /*
 
-TO Do:
+	To Do
+	------------------------------------------
+	Fix diagonal wipe
+	fix radial wipe
+	
 
 
 */
@@ -9,7 +13,6 @@ TO Do:
 
 var SWWipe = (function(banner) {
 
-	//var sww = this;
 	var _this = this;
 	
 	_this.banner = banner;	// div container 
@@ -250,10 +253,11 @@ var SWWipe = (function(banner) {
 					var angle = percent * Math.PI;
 					
 					// calculate coordinates for wedge
-					var x1 = Math.cos(angle + (2*Math.PI)) * (HEIGHT*2) + WIDTH/2;
-					var y1 = Math.sin(angle + (2*Math.PI)) * (HEIGHT*2);
-					var x2 = Math.cos(angle + len + (2*Math.PI)) * (HEIGHT*2) + WIDTH/2;
-					var y2 = Math.sin(angle + len + (2*Math.PI)) * (HEIGHT*2);
+					var x1 = Math.cos(angle + len + (2*Math.PI)) * (HEIGHT*2) + WIDTH/2;
+					var y1 = Math.sin(angle + len + (2*Math.PI)) * (HEIGHT*2);
+					var x2 = Math.cos(angle + (2*Math.PI)) * (HEIGHT*2) + WIDTH/2;
+					var y2 = Math.sin(angle + (2*Math.PI)) * (HEIGHT*2);
+					
 
 					// calculate alpha for wedge
 					var alpha = (adjustedPercent - percent + fadeWidth)/fadeWidth;
@@ -261,9 +265,8 @@ var SWWipe = (function(banner) {
 					// draw wedge 
 					_this.foreContext.beginPath();
 					_this.foreContext.moveTo(WIDTH/2-2,0);
-					_this.foreContext.lineTo(x2,y2);
 					_this.foreContext.lineTo(x1,y1);
-					
+					_this.foreContext.lineTo(x2,y2);
 					_this.foreContext.lineTo(WIDTH/2+2,0);
 					_this.foreContext.fillStyle = 'rgba(0,0,0,'+alpha+')';
 					_this.foreContext.fill();
