@@ -4,7 +4,9 @@
 	------------------------------------------
 	Fix diagonal wipe
 	fix radial wipe
-	
+	grow variables reset at wrong time
+	grow should respect img aspect, right now it's square
+
 
 
 */
@@ -19,7 +21,6 @@ var SWWipe = (function(banner) {
 	_this.images;				// array of img elements
 	_this.imageArray = [];	// object containing all images and their properties
 	_this.percent;			// percent completion of wipe, (ranges from 0 - fadeWidth to 1 + fadeWidth)
-	_this.step;				// the amount to increment _this.percent every frame, varies based on fadeDuration
 	_this.curImg;
 	_this.nxtImg;
 
@@ -37,8 +38,21 @@ var SWWipe = (function(banner) {
 	var currentTime;
 	var elapsed;
 
+	var growSpeed = .33;
+	var grow1 = 0;
+	var grow2 = 0;
+	var curImgLeft;
+	var curImgTop;
+	var curImgWidth;
+	var curImgHeight;
+	var nxtImgLeft;
+	var nxtImgTop;
+	var nxtImgWidth;
+	var nxtImgHeight;
+
 	var fadeWidth;
 	var gradient;
+	var stopped = false;
 
 	function cacheElements() {
 
@@ -75,13 +89,13 @@ var SWWipe = (function(banner) {
 			_this.imageArray.push(imageObject);
 		}
 
-		nextFade();
+		nextWipe();
 		_this.resize();
 	}
 
 
 
-	function nextFade() {
+	function nextWipe() {
 
 		// advance indices
 		index1++;
@@ -92,51 +106,50 @@ var SWWipe = (function(banner) {
 		if(index2 == _this.images.length) index2 = 0;
 		_this.nxtImg = _this.imageArray[index2];
 
-		if(ASPECT > _this.curImg.aspect) {
-
-			_this.backContext.drawImage(
-				_this.curImg.img, 
-				0, 
-				(HEIGHT - (WIDTH / _this.curImg.aspect))/2, 
-				WIDTH, 
-				WIDTH / _this.curImg.aspect);	
-		}
-		else {
-
-			_this.backContext.drawImage(
-				_this.curImg.img, 
-				(WIDTH - (HEIGHT * _this.curImg.aspect))/2, 
-				0, 
-				HEIGHT * _this.curImg.aspect, 
-				HEIGHT);	
-		}
-
-		// clear the foreground
-		_this.foreContext.clearRect(0,0, WIDTH, HEIGHT);
-
 		// setup and start the fade
 		fadeWidth = _this.curImg.fadeWidth;
-		_this.percent = -_this.curImg.fadeWidth;
-		_this.step = 1/(_this.curImg.fadeDuration * 1000);
+		_this.percent = 0;
 		startTime = new Date;
+		
 		redraw();
 	}
 
-
 	function redraw() {
 		
+
+
+		_this.backContext.drawImage(_this.curImg.img, curImgLeft - (grow1/2), curImgTop - ((grow1 / _this.curImg.aspect)/2), curImgWidth + grow1, curImgHeight + (grow1 / _this.curImg.aspect));
+
+		// clear the foreground canvas
+		_this.foreContext.save();
+		_this.foreContext.clearRect(0,0,WIDTH,HEIGHT); 
+		// draw different gradients based on fadeType
+		drawGradient(_this.curImg.fadeType); // DS: maybe this should only return the gradient and we draw it here
+		// draw nxtImg into gradient
+		_this.foreContext.globalCompositeOperation = "source-in";
+		_this.foreContext.drawImage(_this.nxtImg.img, nxtImgLeft - (grow2/2), nxtImgTop - ((grow2 / _this.curImg.aspect)/2), nxtImgWidth + grow2, nxtImgHeight + (grow2 / _this.curImg.aspect));
+		_this.foreContext.restore();
+
 		// calculate percent completion of wipe
 		currentTime = new Date;
 		elapsed = currentTime - startTime;
-		_this.percent = elapsed / _this.curImg.fadeDuration;
-		//fadeWidth = _this.curImg.fadeWidth;
-		
+		_this.percent = elapsed / _this.curImg.fadeDuration > 1 ? 1 : elapsed / _this.curImg.fadeDuration;
 
-		_this.foreContext.save();
-		_this.foreContext.clearRect(0,0,WIDTH,HEIGHT); 
+		// expand image
+		grow1 += growSpeed;
+		grow2 += growSpeed;
 
+		if(elapsed >= _this.curImg.fadeDuration + _this.curImg.fadeDelay) {
+			grow1 = grow2;
+			grow2 = 0;
+			nextWipe();
+		}
+		else requestAnimFrame(redraw);
+	}
 
-		switch(_this.curImg.fadeType) {
+	function drawGradient(fadeType) {
+
+		switch(fadeType) {
 
 			case "cross-lr":
 				gradient = _this.foreContext.createLinearGradient(
@@ -203,7 +216,7 @@ var SWWipe = (function(banner) {
 
 			case "radial-btm":
 
-				var segments = 300; // the amount of segments to split the semi circle into, DS: adjust this for performance
+				var segments = 500; // the amount of segments to split the semi circle into, DS: adjust this for performance
 				var len = Math.PI/segments;
 				var step = 1/segments;
 
@@ -239,7 +252,7 @@ var SWWipe = (function(banner) {
 
 			case "radial-top":
 
-				var segments = 300; // the amount of segments to split the semi circle into, DS: adjust this for performance
+				var segments = 500; // the amount of segments to split the semi circle into, DS: adjust this for performance
 				var len = Math.PI/segments;
 				var step = 1/segments;
 
@@ -304,34 +317,7 @@ var SWWipe = (function(banner) {
 			break;
 
 		}
-
-		_this.foreContext.globalCompositeOperation = "source-in";
-
-		if(ASPECT > _this.nxtImg.aspect) {
-
-			_this.foreContext.drawImage(_this.nxtImg.img, 
-				0, 
-				(HEIGHT - (WIDTH / _this.nxtImg.aspect))/2, 
-				WIDTH, 
-				WIDTH / _this.nxtImg.aspect);	
-		}
-		else {
-
-			_this.foreContext.drawImage(_this.nxtImg.img, 
-				(WIDTH - (HEIGHT * _this.nxtImg.aspect))/2, 
-				0, 
-				HEIGHT * _this.nxtImg.aspect, 
-				HEIGHT);	
-		}
-
-		_this.foreContext.restore();
-
-		
-		if(elapsed < _this.curImg.fadeDuration) requestAnimFrame(redraw);
-		else setTimeout(nextFade, _this.curImg.fadeDelay);
 	}
-
-
 
 	_this.resize = function() {
 
@@ -348,32 +334,44 @@ var SWWipe = (function(banner) {
 
 		if(ASPECT > _this.curImg.aspect) {
 
-			_this.backContext.drawImage(
-				_this.curImg.img, 
-				0, 
-				(HEIGHT - (WIDTH / _this.curImg.aspect))/2, 
-				WIDTH, 
-				WIDTH / _this.curImg.aspect);	
+			curImgLeft = 0;
+			curImgTop = (HEIGHT - (WIDTH / _this.nxtImg.aspect))/2;
+			curImgWidth = WIDTH;
+			curImgHeight = WIDTH / _this.nxtImg.aspect;	
 		}
 		else {
 
-			_this.backContext.drawImage(
-				_this.curImg.img, 
-				(WIDTH - (HEIGHT * _this.curImg.aspect))/2, 
-				0, 
-				HEIGHT * _this.curImg.aspect, 
-				HEIGHT);	
+			curImgLeft = (WIDTH - (HEIGHT * _this.nxtImg.aspect))/2;
+			curImgTop = 0;
+			curImgWidth = HEIGHT * _this.nxtImg.aspect;
+			curImgHeight = HEIGHT;
 		}
+
+		if(ASPECT > _this.nxtImg.aspect) {
+
+			nxtImgLeft = 0;
+			nxtImgTop = (HEIGHT - (WIDTH / _this.nxtImg.aspect))/2;
+			nxtImgWidth = WIDTH;
+			nxtImgHeight = WIDTH / _this.nxtImg.aspect;	
+		}
+		else {
+
+			nxtImgLeft = (WIDTH - (HEIGHT * _this.nxtImg.aspect))/2;
+			nxtImgTop = 0;
+			nxtImgWidth = HEIGHT * _this.nxtImg.aspect;
+			nxtImgHeight = HEIGHT;
+		}
+
+		_this.backContext.drawImage(_this.curImg.img, curImgLeft - (grow1/2), curImgTop - (grow1/2), curImgWidth + grow1, curImgHeight + grow1);
+
 	};
 
 
 	window.requestAnimFrame = (function(){
-		return  window.requestAnimationFrame       ||
-		window.webkitRequestAnimationFrame ||
-		window.mozRequestAnimationFrame    ||
-		function( callback ){
-			window.setTimeout(callback, 1000 / 60);
-		};
+		return  window.requestAnimationFrame ||
+		window.webkitRequestAnimationFrame   ||
+		window.mozRequestAnimationFrame      ||
+		function( callback ) { window.setTimeout(callback, 1000 / 60); };
 	})();
 
 
